@@ -1,5 +1,6 @@
 #include <LiquidCrystal_I2C.h>
-
+#include <SPI.h>
+#include <MFRC522.h>
 /*
  * ----------------------------------------------------------------------------
  * This sketch uses the MFRC522 library ; see https://github.com/miguelbalboa/rfid
@@ -22,29 +23,21 @@
  * SPI SCK     SCK          13 / ICSP-3   52        D13        ICSP-3           15
  *
  */
-#include <SPI.h>
-#include <MFRC522.h>
 
 #define RST_PIN         9           // Configurable, see typical pin layout above
 #define SS_PIN          10          // Configurable, see typical pin layout above
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);   // Create MFRC522 instance.
-LiquidCrystal_I2C lcd(0x27,16,2);  // set the LCD address to 0x27 for a 16 chars and 2 line display
+LiquidCrystal_I2C lcd(0x27,16,2);  // set the LCD address to 0x27 for 16x2 LCD display
+String read_rfid;                   
+String ok_rfid_1="9daff87";        // keyfob RFID ID 
+String ok_rfid_2="b66311f9";       // card   RFID ID
 
-String read_rfid;                   // Add how many you need and don't forget to include the UID.
-String ok_rfid_1="9daff87";        // keyfob
-//String ok_rfid_2="b6xxx1f9";       // card bad
-String ok_rfid_2="b66311f9";       // card
-int lock = 7;                       // For the Card.
-int lock2 = 7;                      // For the Keyfob.
 /*
  * Initialize.
  */
 
  // variables to hold the new and old switch states
-boolean oldSwitchState = LOW;
-boolean newSwitchState = LOW;
-boolean LEDstatus = LOW;
 int rel = 7;
 int rel2 = 8;
 
@@ -57,21 +50,17 @@ void setup() {
     mfrc522.PCD_Init();         // Init MFRC522 card
 
  lcd.init();                      // initialize the lcd 
-  // Print a message to the LCD.
- 
- 
-   lcd.setCursor(0,0);
-   
-  lcd.print("SCAN RFID");
+    lcd.setCursor(0,0);          
+  lcd.print("RFID SCANNER");
    lcd.backlight();
-  delay (2000);
-lcd.noBacklight();
+   delay (2000);
+  lcd.noBacklight();
  
 
-  pinMode(rel, OUTPUT );
-  pinMode(rel2, OUTPUT );
- digitalWrite(rel, HIGH); 
- digitalWrite(rel2, HIGH); 
+  pinMode(rel, OUTPUT );  // relay1 output 
+  pinMode(rel2, OUTPUT ); // relay2 output 
+ digitalWrite(rel, HIGH); // using 5V 2 Relay Module opto-isolated LOW = ON / HIGH = OFF
+ digitalWrite(rel2, HIGH); //
 
 
  
@@ -88,7 +77,7 @@ void dump_byte_array(byte *buffer, byte bufferSize) {
 }
 
 
-void noaccess()
+void noaccess()  //
 {
  lcd.clear();
   lcd.setCursor(0,0);
@@ -123,7 +112,7 @@ void loop() {
      dump_byte_array(mfrc522.uid.uidByte, mfrc522.uid.size);
      Serial.println((String)"card_id: "+read_rfid);
     Serial.println("card id  [read_rfid]");
-    if (read_rfid==ok_rfid_1) {
+    if (read_rfid==ok_rfid_1) {    
   digitalWrite(rel, LOW);
   lcd.setCursor(0,0);
    lcd.print("     KEYFOB    ");
@@ -147,18 +136,15 @@ void loop() {
 
 else 
 
-{
-  noaccess();
+  {
+  noaccess();  
   }
 
 
- digitalWrite(rel, HIGH); 
+ digitalWrite(rel, HIGH); // TURN OFF OUTPUTS 
  digitalWrite(rel2, HIGH);
-//a) if the button is not pressed the false status is reversed by !status and the LED turns on
-//b) if the button is pressed the true status is reveresed by !status and the LED turns off
 
-
-lcd.noBacklight();
+lcd.noBacklight(); //TURN OFF LCD BACKLIGHT
     lcd.clear();
 
 }
